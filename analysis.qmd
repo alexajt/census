@@ -115,5 +115,42 @@ age_ca <- get_acs(
 ```
 
 ```{r}
-age_ca
+age_ca_wide <- age_ca |>
+  mutate(
+    variable = recode(
+      variable,
+      B01002_001 = "median_age",
+      B01003_001 = "population"
+    )
+  ) |>
+  select(GEOID, NAME, variable, estimate) |>
+  pivot_wider(
+    names_from = variable,
+    values_from = estimate
+  ) |>
+  arrange(desc(population))
+
+largest_counties <- slice_head(age_ca_wide, n = 5)
+
+ggplot(age_ca_wide, aes(x = population, y = median_age)) +
+  geom_point(color = "steelblue") +
+  geom_text(
+    data = largest_counties,
+    aes(label = NAME),
+    color = "steelblue",
+    hjust = 1.05,
+    check_overlap = TRUE
+  ) +
+  scale_x_log10(labels = scales::label_comma()) +
+  labs(
+    title = "Median Age and Population by California County",
+    x = "County population (log scale)",
+    y = "Median age (years)",
+    caption = "Source: U.S. Census Bureau, 2020 American Community Survey 5-year estimates (tables B01002 and B01003)."
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    plot.caption = element_text(hjust = 0)
+  )
 ```
